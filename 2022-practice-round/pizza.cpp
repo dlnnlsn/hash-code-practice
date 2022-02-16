@@ -24,7 +24,7 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > graph) {
 	return satisfied;
 }
 
-unordered_set<int> addLeastConflicting(vector<unordered_set<int> > graph) {
+unordered_set<int> addLeastConflicting(const vector<unordered_set<int>>& graph) {
 	unordered_set<int> satisfied;
 	unordered_set<int> potential;
 	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
@@ -43,6 +43,21 @@ unordered_set<int> addLeastConflicting(vector<unordered_set<int> > graph) {
 		potential.erase(leastConflictingPerson);
 	}
 	return satisfied;
+}
+
+void printIngredients(string label, const unordered_set<int>& clients, const vector<unordered_set<string>>& clientLikes) {
+	cerr << label << ": " << clients.size() << endl;
+	unordered_set<string> ingredients;
+	for (auto person : clients) {
+		for (auto ingredient : clientLikes[person]) {
+			ingredients.insert(ingredient);
+		}
+	}
+	cout << ingredients.size();
+	for (auto ingredient : ingredients) {
+		cout << " " << ingredient;
+	}
+	cout << endl;
 }
 
 int main() {
@@ -89,32 +104,10 @@ int main() {
 	}
 
 	unordered_set<int> mostConflictingHeuristic = removeMostConflicting(conflictGraph);
-	cerr << "Most Conflicting Heuristic: " << mostConflictingHeuristic.size() << endl;
-	unordered_set<string> ingredients;
-	for (auto person : mostConflictingHeuristic) {
-		for (auto ingredient : clientLikes[person]) {
-			ingredients.insert(ingredient);
-		}
-	}
-	cout << ingredients.size();
-	for (auto ingredient : ingredients) {
-		cout << " " << ingredient;
-	}
-	cout << endl;
+	printIngredients("Most Conflicting Heuristic", mostConflictingHeuristic, clientLikes);
 
 	unordered_set<int> leastConflictingHeuristic = addLeastConflicting(conflictGraph);
-	cerr << "Least Conflciting Heuristic: " << leastConflictingHeuristic.size() << endl;
-	ingredients.clear();
-	for (auto person : leastConflictingHeuristic) {
-		for (auto ingredient : clientLikes[person]) {
-			ingredients.insert(ingredient);
-		}
-	}
-	cout << ingredients.size();
-	for (auto ingredient : ingredients) {
-		cout << " " << ingredient;
-	}
-	cout << endl;
+	printIngredients("Least Conflicting Heuristic", leastConflictingHeuristic, clientLikes);
 
 	return 0;
 }
