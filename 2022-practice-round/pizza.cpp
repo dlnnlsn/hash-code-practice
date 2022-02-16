@@ -20,10 +20,9 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 	vector<unordered_set<int> > graph = copyGraph(conflictGraph);
 	unordered_set<int> satisfied;
 	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
-	bool hasConflicts = false;
-	int maxConflicts = 0;
-	int mostConflictingPerson = -1;
 	while (true) {
+		int maxConflicts = 0;
+		int mostConflictingPerson = -1;
 		for (auto it = satisfied.begin(); it != satisfied.end(); ++it) {
 			int numConflicts = graph[*it].size();
 			if (numConflicts > maxConflicts) {
