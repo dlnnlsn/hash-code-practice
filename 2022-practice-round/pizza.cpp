@@ -30,6 +30,29 @@ unordered_set<int> randomResolution(const vector<unordered_set<int>>& graph) {
 	return satisfied;
 }
 
+unordered_set<int> uniformRandomResolution(const vector<unordered_set<int>>& graph) {
+	random_device dev;
+	mt19937 gen(dev());
+
+	unordered_set<int> satisfied;
+	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
+	while (true) {
+		vector<int> conflicts;
+		for (auto a : satisfied) {
+			for (auto b : satisfied) {
+				if (graph[a].count(b) != 0) {
+					conflicts.push_back(a);
+					break;
+				}
+			}
+		}
+		if (conflicts.size() == 0) break;
+		uniform_int_distribution<int> dist(0, conflicts.size() - 1);
+		satisfied.erase(conflicts[dist(gen)]);
+	}
+	return satisfied;
+}
+
 unordered_set<int> removeMostConflicting(vector<unordered_set<int> > graph) {
 	unordered_set<int> satisfied;
 	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
@@ -137,6 +160,9 @@ int main() {
 
 	unordered_set<int> randomResolutionHeuristic = randomResolution(conflictGraph);
 	printIngredients("Random Resolution Heuristic", randomResolutionHeuristic, clientLikes);
+
+	unordered_set<int> uniformRandomResolutionHeuristic = uniformRandomResolution(conflictGraph);
+	printIngredients("Uniform Random Resolution Heuristic", uniformRandomResolutionHeuristic, clientLikes);
 
 	return 0;
 }
