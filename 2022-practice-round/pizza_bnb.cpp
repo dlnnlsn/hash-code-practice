@@ -1,44 +1,59 @@
 #include <algorithm>
 #include <iostream>
 #include <set>
+#include <stack>
 #include <unordered_set>
 #include <vector>
 
 using namespace std;
 
-vector<int> branch_and_bound(const vector<set<int>>& graph, vector<int>& included, int person, int best_so_far) {
-	if (person == graph.size()) {
-		if (included.size() > best_so_far) return vector<int>(included);
-		return vector<int>();
-	}
+typedef struct StackFrame {
+	int person;
+	vector<int> included;
 	unordered_set<int> conflicts;
-	for (int client : included) {
-		for (auto it = graph[client].lower_bound(person); it != graph[client].end(); ++it) conflicts.insert(*it);
+	StackFrame(int _person, vector<int> _included, unordered_set<int> _conflicts): person(_person), included(_included), conflicts(_conflicts) {}
+} StackFrame;
+
+vector<int> branch_and_bound(const vector<set<int>>& graph) {
+	vector<int> best_so_far;
+
+	stack<StackFrame> call_stack;
+	call_stack.push(StackFrame(0, vector<int>(), unordered_set<int>()));
+
+	while (call_stack.size() > 0) {
+		StackFrame frame = call_stack.top();
+		call_stack.pop();
+
+		const int person = frame.person;
+		const int bound = frame.included.size() + graph.size() - person - frame.conflicts.size() + frame.conflicts.count(person);
+		if (bound <= best_so_far.size()) continue;
+
+		if (person == graph.size()) {
+			if (frame.included.size() > best_so_far.size()) best_so_far = frame.included;
+			continue;
+		}
+
+		const bool has_current_person = frame.conflicts.count(person) != 0;
+		frame.conflicts.erase(person);
+
+		const int left_bound = frame.included.size() + graph.size() - person - 1 - frame.conflicts.size();
+		if (left_bound > best_so_far.size()) {
+			call_stack.push(StackFrame(person + 1, frame.included, frame.conflicts));
+		}
+
+		if (has_current_person) continue;
+		frame.included.push_back(person);
+		for (auto it = graph[person].upper_bound(person); it != graph[person].end(); ++it) {
+			frame.conflicts.insert(*it);
+		}
+
+		const int right_bound = frame.included.size() + graph.size() - person - 1 - frame.conflicts.size();
+		if (right_bound > best_so_far.size()) {
+			call_stack.push(StackFrame(person + 1, frame.included, frame.conflicts));
+		}
 	}
-	const int left_bound = included.size() + graph.size() - person - 1 - conflicts.size() + conflicts.count(person);
-	vector<int> left_solution;
-	if (left_bound > best_so_far) {
-		left_solution = branch_and_bound(graph, included, person + 1, best_so_far);
-	}
-	if (conflicts.count(person) != 0) {
-		if (left_solution.size() > best_so_far) return left_solution;
-		return vector<int>();
-	}
-	included.push_back(person);
-	for (auto it = graph[person].upper_bound(person); it != graph[person].end(); ++it) conflicts.insert(*it);
-	const int right_bound = included.size() + graph.size() - person - 1 - conflicts.size();
-	const int best_including_left = max(best_so_far, (int)left_solution.size());
-	vector<int> right_solution;
-	if (right_bound > best_including_left) {
-		right_solution = branch_and_bound(graph, included, person + 1, best_including_left);
-	}	
-	included.pop_back();
-	if (right_solution.size() > left_solution.size()) {
-		return right_solution.size() > best_so_far ? right_solution : vector<int>();
-	}
-	else {
-		return left_solution.size() > best_so_far ? left_solution : vector<int>();
-	}
+
+	return best_so_far;
 }
 
 int main() {
@@ -85,7 +100,7 @@ int main() {
 	}
 
 	vector<int> included;
-	vector<int> optimal = branch_and_bound(conflictGraph, included, 0, 0);
+	vector<int> optimal = branch_and_bound(conflictGraph);
 	std::cerr << "Branch and Bound: " << optimal.size() << endl;
 	unordered_set<string> ingredients;
 	for (auto person : optimal) {
