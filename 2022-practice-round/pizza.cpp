@@ -66,10 +66,10 @@ int main() {
 	for (int i = 0; i < C; ++i) {
 		unordered_set<int> neighbours;
 		for (int j = 0; j < C; ++j) {
-			for (auto ingredient : clientLikes) {
+			for (auto ingredient : clientLikes[i]) {
 				if (clientDislikes[j].count(ingredient) != 0) neighbours.insert(j);
 			}
-			for (auto ingredient : clientDislikes) {
+			for (auto ingredient : clientDislikes[i]) {
 				if (clientLikes[j].count(ingredient) != 0) neighbours.insert(j);
 			}
 		}
