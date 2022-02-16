@@ -70,18 +70,19 @@ int main() {
 	}
 
 	vector<unordered_set<int>> conflictGraph;
+	for (int i = 0; i < C; ++i) conflictGraph.push_back(unordered_set<int>());
 
 	for (int i = 0; i < C; ++i) {
-		unordered_set<int> neighbours;
 		for (int j = 0; j < C; ++j) {
+			if (i == j) continue;
 			for (auto ingredient : clientLikes[i]) {
-				if (clientDislikes[j].count(ingredient) != 0) neighbours.insert(j);
-			}
-			for (auto ingredient : clientDislikes[i]) {
-				if (clientLikes[j].count(ingredient) != 0) neighbours.insert(j);
+				if (clientDislikes[j].count(ingredient) != 0) {
+					conflictGraph[i].insert(j);
+					conflictGraph[j].insert(i);
+					break;
+				}
 			}
 		}
-		conflictGraph.push_back(neighbours);
 	}
 
 	unordered_set<int> mostConflictingHeuristic = removeMostConflicting(conflictGraph);
