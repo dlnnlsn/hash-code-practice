@@ -1,11 +1,19 @@
 #include <algorithm>
 #include <iostream>
 #include <set>
+#include <signal.h>
 #include <stack>
 #include <unordered_set>
 #include <vector>
 
 using namespace std;
+
+bool running = true;
+
+void sigint_handler(int sig) {
+	cerr << "Writing best solution found so far..." << endl;
+	running = false;
+}
 
 typedef struct StackFrame {
 	int person;
@@ -20,7 +28,7 @@ vector<int> branch_and_bound(const vector<set<int>>& graph) {
 	stack<StackFrame> call_stack;
 	call_stack.push(StackFrame(0, vector<int>(), unordered_set<int>()));
 
-	while (call_stack.size() > 0) {
+	while (running && call_stack.size() > 0) {
 		StackFrame frame = call_stack.top();
 		call_stack.pop();
 
@@ -29,7 +37,10 @@ vector<int> branch_and_bound(const vector<set<int>>& graph) {
 		if (bound <= best_so_far.size()) continue;
 
 		if (person == graph.size()) {
-			if (frame.included.size() > best_so_far.size()) best_so_far = frame.included;
+			if (frame.included.size() > best_so_far.size()) {
+				best_so_far = frame.included;
+				cerr << "Best so far: " << best_so_far.size() << endl;
+			}
 			continue;
 		}
 
@@ -99,7 +110,8 @@ int main() {
 		}
 	}
 
-	vector<int> included;
+	signal(SIGINT, sigint_handler);
+
 	vector<int> optimal = branch_and_bound(conflictGraph);
 	std::cerr << "Branch and Bound: " << optimal.size() << endl;
 	unordered_set<string> ingredients;
