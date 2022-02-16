@@ -11,6 +11,7 @@ unordered_set<int> randomResolution(const vector<unordered_set<int>>& graph) {
 	uniform_int_distribution<int> random_bool(0, 1);
 
 	unordered_set<int> satisfied;
+	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
 	bool hasConflict = true;
 	while (hasConflict) {
 		hasConflict = false;
@@ -133,6 +134,9 @@ int main() {
 
 	unordered_set<int> leastConflictingHeuristic = addLeastConflicting(conflictGraph);
 	printIngredients("Least Conflicting Heuristic", leastConflictingHeuristic, clientLikes);
+
+	unordered_set<int> randomResolutionHeuristic = randomResolution(conflictGraph);
+	printIngredients("Random Resolution Heuristic", randomResolutionHeuristic, clientLikes);
 
 	return 0;
 }
