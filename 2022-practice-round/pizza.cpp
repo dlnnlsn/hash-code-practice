@@ -28,5 +28,20 @@ int main() {
 		clientDislikes.push_back(dislikes);
 	}
 
+	vector<unordered_set<int>> conflictGraph;
+
+	for (int i = 0; i < C; ++i) {
+		unordered_set<int> neighbours;
+		for (int j = 0; j < C; ++j) {
+			for (auto it = clientLikes[i].begin(); it != clientLikes[i].end(); ++it) {
+				if (clientDislikes[j].count(*it) != 0) neighbours.insert(j);
+			}
+			for (auto it = clientDislikes[i].begin(); it != clientDislikes[i].end(); ++it) {
+				if (clientLikes[j].count(*it) != 0) neighbours.insert(j);
+			}
+		}
+		conflictGraph.push_back(neighbours);
+	}
+
 	return 0;
 }
