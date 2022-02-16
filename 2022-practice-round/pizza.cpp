@@ -4,7 +4,7 @@
 
 using namespace std;
 
-unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGraph) {
+unordered_set<int> removeMostConflicting(vector<unordered_set<int> > graph) {
 	unordered_set<int> satisfied;
 	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
 	while (true) {
@@ -24,7 +24,7 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 	return satisfied;
 }
 
-unordered_set<int> addLeastConflicting(vector<unordered_set<int> > conflictGraph) {
+unordered_set<int> addLeastConflicting(vector<unordered_set<int> > graph) {
 	unordered_set<int> satisfied;
 	unordered_set<int> potential;
 	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
