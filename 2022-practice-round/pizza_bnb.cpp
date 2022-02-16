@@ -23,7 +23,6 @@ void sigint_handler(int sig) {
 int running_threads = 0;
 constexpr int max_threads = 128;
 
-int best_so_far_size = 0;
 vector<int> best_so_far;
 mutex best_lock;
 
@@ -43,9 +42,9 @@ bool can_spwan_thread() {
 
 int best_size() {
 	best_lock.lock();
-	int value = best_so_far_size;
+	int value = best_so_far.size();
 	best_lock.unlock();
-	return best_so_far_size;
+	return value;
 }
 
 typedef struct StackFrame {
@@ -65,12 +64,9 @@ void branch_and_bound(stack<StackFrame> call_stack) {
 		if (bound <= best_size()) continue;
 
 		best_lock.lock();
-		if (frame.included.size() > best_so_far_size) {
-			best_so_far_size = frame.included.size();
-			if (person == graph.size()) {
-				best_so_far = frame.included;
-			}
-			cerr << "Best so far: " << best_so_far_size << endl;
+		if (frame.included.size() > best_so_far.size()) {
+			best_so_far = frame.included;
+			cerr << "Best so far: " << best_so_far.size() << endl;
 		}
 		best_lock.unlock();
 
