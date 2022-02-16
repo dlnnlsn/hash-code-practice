@@ -27,7 +27,7 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 			int numConflicts = graph[person].size();
 			if (numConflicts > maxConflicts) {
 				maxConflicts = numConflicts;
-				mostConflictingPerson = *it;
+				mostConflictingPerson = person;
 			}
 		}
 		if (maxConflicts == 0) break;
