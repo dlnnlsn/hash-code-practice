@@ -37,6 +37,28 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 	return satisfied;
 }
 
+unordered_set<int> addLeastConflicting(vector<unordered_set<int> > conflictGraph) {
+	vector<unordered_set<int> > graph = copyGraph(conflictGraph);
+	unordered_set<int> satisfied;
+	unordered_set<int> potential;
+	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
+	while (potential.size() > 0) {
+		int leastConflicts = graph.size() + 1;
+		int leastConflictingPerson = -1;
+		for (auto person : potential) {
+			int numConflicts = graph[person].size();
+			if (numConflicts < leastConflicts) {
+				leastConflicts = numConflicts;
+				leastConflictingPerson = person;
+			}
+		}
+		satisfied.insert(leastConflictingPerson);
+		for (auto person : graph[leastConflictingPerson]) potential.erase(person);
+		potential.erase(leastConflictingPerson);
+	}
+	return satisfied;
+}
+
 int main() {
 
 	int C; cin >> C;
