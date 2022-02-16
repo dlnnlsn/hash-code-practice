@@ -32,8 +32,8 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 			}
 		}
 		if (maxConflicts == 0) break;
-		satisfied.remove(mostConflictingPerson);
-		for (auto node : graph) node.remove(mostConflictingPerson);
+		satisfied.erase(mostConflictingPerson);
+		for (auto node : graph) node.erase(mostConflictingPerson);
 	}
 	return satisfied;
 }
@@ -75,6 +75,19 @@ int main() {
 			}
 		}
 		conflictGraph.push_back(neighbours);
+	}
+
+	unordered_set<int> mostConflictingHeuristic = removeMostConflicting(conflictGraph);
+	cerr << "Satisfied people: " << mostConflictingHeuristic.size();
+	unordered_set<string> ingredients;
+	for (auto person : mostConflictingHeuristic) {
+		for (auto ingredient : clientLikes[person]) {
+			ingredients.insert(ingredient);
+		}
+	}
+	cout << ingredients.size();
+	for (auto ingredient : ingredients) {
+		cout << " " << ingredient;
 	}
 
 	return 0;
