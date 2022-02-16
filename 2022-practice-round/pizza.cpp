@@ -51,26 +51,29 @@ int main() {
 
 	vector<unordered_set<string>> clientLikes;
 	vector<unordered_set<string>> clientDislikes;
+	clientLikes.reserve(C);
+	clientDislikes.reserve(C);
+	for (int i = 0; i < C; ++i) {
+		clientLikes[i] = unordered_set<string>();
+		clientDislikes[i] = unordered_set<string>();
+	}
 
 	for (int client = 0; client < C; ++client) {
 		int L; cin >> L;
-		unordered_set<string> likes;
 		for (int i = 0; i < L; ++i) {
 			string ingredient; cin >> ingredient;
-			likes.insert(ingredient);
+			clientLikes[client].insert(ingredient);
 		}
-		clientLikes.push_back(likes);
 		int D; cin >> D;
-		unordered_set<string> dislikes;
 		for (int i = 0; i < D; ++i) {
 			string ingredient; cin >> ingredient;
-			dislikes.insert(ingredient);
+			clientDislikes[client].insert(ingredient);
 		}
-		clientDislikes.push_back(dislikes);
 	}
 
 	vector<unordered_set<int>> conflictGraph;
-	for (int i = 0; i < C; ++i) conflictGraph.push_back(unordered_set<int>());
+	conflictGraph.reserve(C);
+	for (int i = 0; i < C; ++i) conflictGraph[i] = unordered_set<int>();
 
 	for (int i = 0; i < C; ++i) {
 		for (int j = 0; j < C; ++j) {
