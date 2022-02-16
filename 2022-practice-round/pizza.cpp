@@ -4,20 +4,7 @@
 
 using namespace std;
 
-vector<unordered_set<int>> copyGraph(vector<unordered_set<int> > graph) {
-	vector<unordered_set<int> > copy;
-	for (auto node : graph) {
-		unordered_set<int> neighbours;
-		for (auto it = node.begin(); it != node.end(); ++it) {
-			neighbours.insert(*it);
-		}
-		copy.push_back(neighbours);
-	}
-	return copy;
-}
-
 unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGraph) {
-	vector<unordered_set<int> > graph = copyGraph(conflictGraph);
 	unordered_set<int> satisfied;
 	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
 	while (true) {
@@ -38,7 +25,6 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 }
 
 unordered_set<int> addLeastConflicting(vector<unordered_set<int> > conflictGraph) {
-	vector<unordered_set<int> > graph = copyGraph(conflictGraph);
 	unordered_set<int> satisfied;
 	unordered_set<int> potential;
 	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
