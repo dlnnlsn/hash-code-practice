@@ -4,6 +4,40 @@
 
 using namespace std;
 
+vector<unordered_set<int>> copyGraph(vector<unordered_set<int> > graph) {
+	vector<unordered_set<int> > copy;
+	for (auto node : graph) {
+		unordered_set<int> neighbours;
+		for (auto it = node.begin(); it != node.end(); ++it) {
+			neighbours.insert(*it);
+		}
+		copy.push_back(neighbours);
+	}
+	return copy;
+}
+
+unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGraph) {
+	vector<unordered_set<int> > graph = copyGraph(conflictGraph);
+	unordered_set<int> satisfied;
+	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
+	bool hasConflicts = false;
+	int maxConflicts = 0;
+	int mostConflictingPerson = -1;
+	while (true) {
+		for (auto it = satisfied.begin(); it != satisfied.end(); ++it) {
+			int numConflicts = graph[*it].size();
+			if (numConflicts > maxConflicts) {
+				maxConflicts = numConflicts;
+				mostConflictingPerson = *it;
+			}
+		}
+		if (maxConflicts == 0) break;
+		satisfied.remove(mostConflictingPerson);
+		for (auto node : graph) node.remove(mostConflictingPerson);
+	}
+	return satisfied;
+}
+
 int main() {
 
 	int C; cin >> C;
