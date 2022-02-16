@@ -23,8 +23,8 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 	while (true) {
 		int maxConflicts = 0;
 		int mostConflictingPerson = -1;
-		for (auto it = satisfied.begin(); it != satisfied.end(); ++it) {
-			int numConflicts = graph[*it].size();
+		for (auto person : satisfied) {
+			int numConflicts = graph[person].size();
 			if (numConflicts > maxConflicts) {
 				maxConflicts = numConflicts;
 				mostConflictingPerson = *it;
@@ -32,7 +32,7 @@ unordered_set<int> removeMostConflicting(vector<unordered_set<int> > conflictGra
 		}
 		if (maxConflicts == 0) break;
 		satisfied.erase(mostConflictingPerson);
-		for (auto node : graph) node.erase(mostConflictingPerson);
+		for (auto& node : graph) node.erase(mostConflictingPerson);
 	}
 	return satisfied;
 }
@@ -66,18 +66,18 @@ int main() {
 	for (int i = 0; i < C; ++i) {
 		unordered_set<int> neighbours;
 		for (int j = 0; j < C; ++j) {
-			for (auto it = clientLikes[i].begin(); it != clientLikes[i].end(); ++it) {
-				if (clientDislikes[j].count(*it) != 0) neighbours.insert(j);
+			for (auto ingredient : clientLikes) {
+				if (clientDislikes[j].count(ingredient) != 0) neighbours.insert(j);
 			}
-			for (auto it = clientDislikes[i].begin(); it != clientDislikes[i].end(); ++it) {
-				if (clientLikes[j].count(*it) != 0) neighbours.insert(j);
+			for (auto ingredient : clientDislikes) {
+				if (clientLikes[j].count(ingredient) != 0) neighbours.insert(j);
 			}
 		}
 		conflictGraph.push_back(neighbours);
 	}
 
 	unordered_set<int> mostConflictingHeuristic = removeMostConflicting(conflictGraph);
-	cerr << "Satisfied people: " << mostConflictingHeuristic.size();
+	cerr << "Satisfied people: " << mostConflictingHeuristic.size() << endl;
 	unordered_set<string> ingredients;
 	for (auto person : mostConflictingHeuristic) {
 		for (auto ingredient : clientLikes[person]) {
