@@ -1,40 +1,57 @@
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <unordered_set>
 #include <vector>
 
 using namespace std;
 
-unordered_set<int> branch_and_bound(const vector<unordered_set<int>>& graph, unordered_set<int> included, unordered_set<int> conflicts, int person, int best_so_far) {
-	if (person == graph.size()) return included.size() > best_so_far ? included : unordered_set<int>();
-	conflicts.erase(person - 1);
-	int leftBound = included.size() + graph.size() - person - 1 - conflicts.size() + conflicts.count(person);
-	unordered_set<int> leftSolution;
-	if (leftBound > best_so_far) leftSolution = branch_and_bound(graph, included, conflicts, person + 1, best_so_far);
-	if (conflicts.count(person) != 0) return leftSolution.size() > best_so_far ? leftSolution : unordered_set<int>();
-	included.insert(person);
-	for (int neighbour : graph[person]) {
-		if (neighbour > person) conflicts.insert(neighbour);
-	} 
-	int rightBound = included.size() + graph.size() - person - 1 - conflicts.size();
-	unordered_set<int> rightSolution;
-	if (rightBound > max(best_so_far, (int)leftSolution.size())) rightSolution = branch_and_bound(graph, included, conflicts, person + 1, max(best_so_far, (int)leftSolution.size()));
-	if (rightSolution.size() > max(best_so_far, (int)leftSolution.size())) return rightSolution;
-	if (leftSolution.size() > max(best_so_far, (int)rightSolution.size())) return leftSolution;
-	return unordered_set<int>();
+vector<int> branch_and_bound(const vector<set<int>>& graph, vector<int>& included, int person, int best_so_far) {
+	if (person == graph.size()) {
+		if (included.size() > best_so_far) return vector<int>(included);
+		return vector<int>();
+	}
+	unordered_set<int> conflicts;
+	for (int client : included) {
+		for (auto it = graph[client].lower_bound(person); it != graph[client].end(); ++it) conflicts.insert(*it);
+	}
+	const int left_bound = included.size() + graph.size() - person - 1 - conflicts.size() + conflicts.count(person);
+	vector<int> left_solution;
+	if (left_bound > best_so_far) {
+		left_solution = branch_and_bound(graph, included, person + 1, best_so_far);
+	}
+	if (conflicts.count(person) != 0) {
+		if (left_solution.size() > best_so_far) return left_solution;
+		return vector<int>();
+	}
+	included.push_back(person);
+	for (auto it = graph[person].upper_bound(person); it != graph[person].end(); ++it) conflicts.insert(*it);
+	const int right_bound = included.size() + graph.size() - person - 1 - conflicts.size();
+	const int best_including_left = max(best_so_far, (int)left_solution.size());
+	vector<int> right_solution;
+	if (right_bound > best_including_left) {
+		right_solution = branch_and_bound(graph, included, person + 1, best_including_left);
+	}	
+	included.pop_back();
+	if (right_solution.size() > left_solution.size()) {
+		return right_solution.size() > best_so_far ? right_solution : vector<int>();
+	}
+	else {
+		return left_solution.size() > best_so_far ? left_solution : vector<int>();
+	}
 }
 
 int main() {
 
 	int C; cin >> C;
 
-	vector<unordered_set<string>> clientLikes;
-	vector<unordered_set<string>> clientDislikes;
+	vector<set<string>> clientLikes;
+	vector<set<string>> clientDislikes;
 	clientLikes.reserve(C);
 	clientDislikes.reserve(C);
 	for (int i = 0; i < C; ++i) {
-		clientLikes.push_back(unordered_set<string>();
-		clientDislikes[i] = unordered_set<string>();
+		clientLikes.push_back(set<string>());
+		clientDislikes.push_back(set<string>());
 	}
 
 	for (int client = 0; client < C; ++client) {
@@ -50,9 +67,9 @@ int main() {
 		}
 	}
 
-	vector<unordered_set<int>> conflictGraph;
+	vector<set<int>> conflictGraph;
 	conflictGraph.reserve(C);
-	for (int i = 0; i < C; ++i) conflictGraph[i] = unordered_set<int>();
+	for (int i = 0; i < C; ++i) conflictGraph.push_back(set<int>());
 
 	for (int i = 0; i < C; ++i) {
 		for (int j = 0; j < C; ++j) {
@@ -66,9 +83,10 @@ int main() {
 			}
 		}
 	}
-	
-	unordered_set<int> optimal = branch_and_bound(conflictGraph, unordered_set<int>(), unordered_set<int>(), 0, 0);
-	cerr << "Branch and Bound: " << optimal.size() << endl;
+
+	vector<int> included;
+	vector<int> optimal = branch_and_bound(conflictGraph, included, 0, 0);
+	std::cerr << "Branch and Bound: " << optimal.size() << endl;
 	unordered_set<string> ingredients;
 	for (auto person : optimal) {
 		for (auto ingredient : clientLikes[person]) {
