@@ -99,7 +99,7 @@ int main() {
 	}
 
 	unordered_set<int> mostConflictingHeuristic = removeMostConflicting(conflictGraph);
-	cerr << "Satisfied people: " << mostConflictingHeuristic.size() << endl;
+	cerr << "Most Conflicting Heuristic: " << mostConflictingHeuristic.size() << endl;
 	unordered_set<string> ingredients;
 	for (auto person : mostConflictingHeuristic) {
 		for (auto ingredient : clientLikes[person]) {
@@ -110,6 +110,21 @@ int main() {
 	for (auto ingredient : ingredients) {
 		cout << " " << ingredient;
 	}
+	cout << endl;
+
+	unordered_set<int> leastConflictingHeuristic = addLeastConflicting(conflictGraph);
+	cerr << "Least Conflciting Heuristic: " << leastConflictingHeuristic.size() << endl;
+	ingredients.clear();
+	for (auto person : leastConflictingHeuristic) {
+		for (auto ingredient : clientLikes[person]) {
+			ingredients.insert(ingredient);
+		}
+	}
+	cout << ingredients.size();
+	for (auto ingredient : ingredients) {
+		cout << " " << ingredient;
+	}
+	cout << endl;
 
 	return 0;
 }
