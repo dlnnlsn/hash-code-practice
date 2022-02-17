@@ -31,8 +31,15 @@ int heuristic(const vector<unordered_set<int>>& graph, unordered_set<int> potent
 		int leastConflictingPerson = -1;
 		for (int person : potential) {
 			int conflicts = 0;
-			for (int neighbour : graph[person]) {
-				conflicts += potential.count(neighbour);
+			if (potential.size() < graph[person].size()) {
+				for (int potential_neighbour : potential) {
+					conflicts += graph[person].count(potential_neighbour);
+				}
+			}
+			else {
+				for (int neighbour : graph[person]){
+					conflicts += potential.count(neighbour);
+				}
 			}
 			if (conflicts < leastConflicts) {
 				leastConflicts = conflicts;
