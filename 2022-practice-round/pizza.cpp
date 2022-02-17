@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -94,6 +95,25 @@ unordered_set<int> addLeastConflicting(const vector<unordered_set<int>>& graph) 
 	return satisfied;
 }
 
+unordered_set<int> leastDislikes(const vector<unordered_set<int>>& graph, const vector<unordered_set<string>>& clientDislikes) {
+	unordered_set<int> satisfied;
+	unordered_set<int> potential;
+	for (int i = 0; i < clientDislikes.size(); ++i) potential.insert(i);
+	while (potential.size() > 0) {
+		int leastDislikes = -1;
+		int leastFussyPerson = -1;
+		for (int person : potential) {
+			if (leastDislikes == -1 || clientDislikes[person].size() < leastDislikes) {
+				leastDislikes = clientDislikes[person].size();
+				leastFussyPerson = person;
+			}
+		}
+		satisfied.insert(leastFussyPerson);
+		potential.erase(leastFussyPerson);
+		for (int person : graph[leastFussyPerson]) potential.erase(person);
+	}
+	return satisfied;
+}
 void printIngredients(string label, const unordered_set<int>& clients, const vector<unordered_set<string>>& clientLikes) {
 	cerr << label << ": " << clients.size() << endl;
 	unordered_set<string> ingredients;
@@ -164,5 +184,7 @@ int main() {
 	unordered_set<int> uniformRandomResolutionHeuristic = uniformRandomResolution(conflictGraph);
 	printIngredients("Uniform Random Resolution Heuristic", uniformRandomResolutionHeuristic, clientLikes);
 
+	unordered_set<int> leastDislikesHeuristic = leastDislikes(conflictGraph, clientDislikes);
+	printIngredients("Least Dislikes Heuristic", leastDislikesHeuristic, clientLikes);
 	return 0;
 }
