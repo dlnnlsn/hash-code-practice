@@ -114,6 +114,28 @@ unordered_set<int> leastDislikes(const vector<unordered_set<int>>& graph, const 
 	}
 	return satisfied;
 }
+
+unordered_set<int> fewestPreferences(const vector<unordered_set<int>>& graph, const vector<unordered_set<string>>& clientLikes, const vector<unordered_set<string>>& clientDislikes) {
+	unordered_set<int> satisfied;
+	unordered_set<int> potential;
+	for (int i = 0; i < clientDislikes.size(); ++i) potential.insert(i);
+	while (potential.size() > 0) {
+		int fewestPreferences = -1;
+		int leastFussyPerson = -1;
+		for (int person : potential) {
+			if (fewestPreferences== -1 || clientDislikes[person].size() + clientLikes[person].size() < fewestPreferences) {
+				fewestPreferences = clientDislikes[person].size() + clientLikes[person].size();
+				leastFussyPerson = person;
+			}
+		}
+		satisfied.insert(leastFussyPerson);
+		potential.erase(leastFussyPerson);
+		for (int person : graph[leastFussyPerson]) potential.erase(person);
+	}
+	return satisfied;
+}
+
+
 void printIngredients(string label, const unordered_set<int>& clients, const vector<unordered_set<string>>& clientLikes) {
 	cerr << label << ": " << clients.size() << endl;
 	unordered_set<string> ingredients;
@@ -186,5 +208,9 @@ int main() {
 
 	unordered_set<int> leastDislikesHeuristic = leastDislikes(conflictGraph, clientDislikes);
 	printIngredients("Least Dislikes Heuristic", leastDislikesHeuristic, clientLikes);
+
+	unordered_set<int> fewestPreferencesHeuristic = fewestPreferences(conflictGraph, clientLikes, clientDislikes);
+	printIngredients("Fewest Preferences Heuristic", fewestPreferencesHeuristic, clientLikes);
+
 	return 0;
 }
