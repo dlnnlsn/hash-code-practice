@@ -3,6 +3,7 @@
 #include <random>
 #include <signal.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -87,7 +88,13 @@ typedef struct Gene {
 	BitSet ingredients;
 	int fitness;
 	Gene(BitSet ingredients, int fitness) : ingredients(ingredients), fitness(fitness) {}
-	friend constexpr bool operator<(const Gene& a, const Gene& b) { return a.fitness < b.fitness; }
+	friend constexpr bool operator<(const Gene& a, const Gene& b) { 
+		if (a.fitness != b.fitness) return a.fitness < b.fitness; 
+		for (size_t i = 0; i < a.ingredients.bits.size(); ++i) {
+			if (a.ingredients.bits[i] != b.ingredients.bits[i]) return a.ingredients.bits[i] < b.ingredients.bits[i];
+		}
+		return false;
+	}
 } Gene;
 
 const int evaluate_fitness(const BitSet& ingredients, const vector<BitSet>& clientLikes, const vector<BitSet>& clientDislikes) {
@@ -112,9 +119,9 @@ const BitSet random_bitset(Generator& gen, size_t size) {
 }
 
 template <class Generator>
-const BitSet flip_random_bit(Generator& gen, const BitSet& bits) {
+const BitSet flip_random_bit(Generator& gen, const BitSet& bits, const size_t num_bits) {
 	BitSet new_bits(bits.bits);
-	uniform_int_distribution<size_t> dist(0, bits.bits.size() - 1);
+	uniform_int_distribution<size_t> dist(0, num_bits - 1);
 	uniform_real_distribution<double> real_dist(0, 1);
 	do {
 		new_bits.flip(dist(gen));
@@ -133,6 +140,95 @@ const BitSet satisfy_random_client(Generator& gen, const BitSet& bits, const vec
 		result = result & (~client_dislikes[client_index]);
 	} while (real_dist(gen) < client_satisfaction_probability);
 	return result;
+}
+
+unordered_set<int> removeMostConflicting(vector<unordered_set<int> > graph) {
+	unordered_set<int> satisfied;
+	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
+	while (true) {
+		int maxConflicts = 0;
+		int mostConflictingPerson = -1;
+		for (auto person : satisfied) {
+			int numConflicts = graph[person].size();
+			if (numConflicts > maxConflicts) {
+				maxConflicts = numConflicts;
+				mostConflictingPerson = person;
+			}
+		}
+		if (maxConflicts == 0) break;
+		satisfied.erase(mostConflictingPerson);
+		for (auto& node : graph) node.erase(mostConflictingPerson);
+	}
+	return satisfied;
+}
+
+unordered_set<int> addLeastConflicting(const vector<unordered_set<int>>& graph) {
+	unordered_set<int> satisfied;
+	unordered_set<int> potential;
+	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
+	while (potential.size() > 0) {
+		int leastConflicts = graph.size() + 1;
+		int leastConflictingPerson = -1;
+		for (auto person : potential) {
+			int numConflicts = graph[person].size();
+			if (numConflicts < leastConflicts) {
+				leastConflicts = numConflicts;
+				leastConflictingPerson = person;
+			}
+		}
+		satisfied.insert(leastConflictingPerson);
+		for (auto person : graph[leastConflictingPerson]) potential.erase(person);
+		potential.erase(leastConflictingPerson);
+	}
+	return satisfied;
+}
+
+unordered_set<int> leastDislikes(const vector<unordered_set<int>>& graph, const vector<vector<string>>& clientDislikes) {
+	unordered_set<int> satisfied;
+	unordered_set<int> potential;
+	for (int i = 0; i < clientDislikes.size(); ++i) potential.insert(i);
+	while (potential.size() > 0) {
+		int leastDislikes = -1;
+		int leastFussyPerson = -1;
+		for (int person : potential) {
+			if (leastDislikes == -1 || clientDislikes[person].size() < leastDislikes) {
+				leastDislikes = clientDislikes[person].size();
+				leastFussyPerson = person;
+			}
+		}
+		satisfied.insert(leastFussyPerson);
+		potential.erase(leastFussyPerson);
+		for (int person : graph[leastFussyPerson]) potential.erase(person);
+	}
+	return satisfied;
+}
+
+unordered_set<int> fewestPreferences(const vector<unordered_set<int>>& graph, const vector<vector<string>>& clientLikes, const vector<vector<string>>& clientDislikes) {
+	unordered_set<int> satisfied;
+	unordered_set<int> potential;
+	for (int i = 0; i < clientDislikes.size(); ++i) potential.insert(i);
+	while (potential.size() > 0) {
+		int fewestPreferences = -1;
+		int leastFussyPerson = -1;
+		for (int person : potential) {
+			if (fewestPreferences== -1 || clientDislikes[person].size() + clientLikes[person].size() < fewestPreferences) {
+				fewestPreferences = clientDislikes[person].size() + clientLikes[person].size();
+				leastFussyPerson = person;
+			}
+		}
+		satisfied.insert(leastFussyPerson);
+		potential.erase(leastFussyPerson);
+		for (int person : graph[leastFussyPerson]) potential.erase(person);
+	}
+	return satisfied;
+}
+
+BitSet ingredients_from_client_set(const unordered_set<int>& clients, const vector<BitSet>& client_likes, const int num_ingredients) {
+	BitSet ingredients = BitSet(num_ingredients);
+	for (int client : clients) {
+		ingredients = ingredients | client_likes[client];
+	}
+	return ingredients;
 }
 
 int main() {
@@ -195,10 +291,37 @@ int main() {
 		clientDislikes.push_back(dislikes);
 	}
 
+	vector<unordered_set<int>> conflictGraph;
+	conflictGraph.reserve(C);
+	for (int i = 0; i < C; ++i) conflictGraph.push_back(unordered_set<int>());
+
+	for (int i = 0; i < C; ++i) {
+		for (int j = 0; j < C; ++j) {
+			if (i == j) continue;
+			if (!(clientLikes[i] & clientDislikes[j]).empty()) {
+				conflictGraph[i].insert(j);
+				conflictGraph[j].insert(i);
+			}
+		}
+	}
+
 	cerr << "Creating initial gene pool..." << endl;
 
 	vector<Gene> pool; pool.reserve(pool_size);
-	for (int i = 0; i < pool_size; ++i) {
+
+	BitSet most_conflicting = ingredients_from_client_set(removeMostConflicting(conflictGraph), clientLikes, ingredient_names.size());
+	pool.push_back(Gene(most_conflicting, evaluate_fitness(most_conflicting, clientLikes, clientDislikes)));
+
+	BitSet least_conflicting = ingredients_from_client_set(addLeastConflicting(conflictGraph), clientLikes, ingredient_names.size());
+	pool.push_back(Gene(least_conflicting, evaluate_fitness(least_conflicting, clientLikes, clientDislikes)));
+
+	BitSet least_dislikes = ingredients_from_client_set(leastDislikes(conflictGraph, clientDislikeNames), clientLikes, ingredient_names.size());
+	pool.push_back(Gene(least_dislikes, evaluate_fitness(least_dislikes, clientLikes, clientDislikes)));
+
+	BitSet fewest_preferred = ingredients_from_client_set(fewestPreferences(conflictGraph, clientLikeNames, clientDislikeNames), clientLikes, ingredient_names.size());
+	pool.push_back(Gene(fewest_preferred, evaluate_fitness(fewest_preferred, clientLikes, clientDislikes)));
+
+	for (int i = 0; i < pool_size - 4; ++i) {
 		const BitSet ingredients = random_bitset(gen, ingredient_names.size());
 		const int fitness = evaluate_fitness(ingredients, clientLikes, clientDislikes);
 		pool.push_back(Gene(ingredients, fitness));
@@ -214,13 +337,24 @@ int main() {
 		vector<Gene> new_pool; new_pool.reserve(3 * pool_size);
 		for (Gene gene : pool) {
 			new_pool.push_back(gene);
-			const BitSet random_ingredient_flipped = flip_random_bit(gen, gene.ingredients);
+			const BitSet random_ingredient_flipped = flip_random_bit(gen, gene.ingredients, ingredient_names.size());
 			new_pool.push_back(Gene(random_ingredient_flipped, evaluate_fitness(random_ingredient_flipped, clientLikes, clientDislikes)));
 			const BitSet random_client_satisfied = satisfy_random_client(gen, gene.ingredients, clientLikes, clientDislikes);
 			new_pool.push_back(Gene(random_client_satisfied, evaluate_fitness(random_client_satisfied, clientLikes, clientDislikes)));
 		}
 		sort(new_pool.begin(), new_pool.end());
-		pool = vector<Gene>(new_pool.end() - pool_size, new_pool.end());
+		vector<Gene> filtered_pool; filtered_pool.reserve(3 * pool_size);
+		filtered_pool.push_back(new_pool.front());
+		for (Gene gene : new_pool) {
+			if (!(gene.ingredients == filtered_pool.back().ingredients)) {
+				filtered_pool.push_back(gene);
+			}
+		}
+		while (filtered_pool.size() < pool_size) {
+			const BitSet ingredients = random_bitset(gen, ingredient_names.size());
+			filtered_pool.push_back(Gene(ingredients, evaluate_fitness(ingredients, clientLikes, clientDislikes)));
+		}
+		pool = vector<Gene>(filtered_pool.end() - pool_size, filtered_pool.end());
 	}
 
 	BitSet ingredients = pool.back().ingredients;
