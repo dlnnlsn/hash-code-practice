@@ -8,6 +8,8 @@
 using namespace std;
 
 constexpr int pool_size = 1000;
+constexpr double bit_flip_probability = 0.5;
+constexpr double client_satisfaction_probability = 0.33;
 
 bool running = true;
 bool evolution_started = false;
@@ -113,17 +115,24 @@ template <class Generator>
 const BitSet flip_random_bit(Generator& gen, const BitSet& bits) {
 	BitSet new_bits(bits.bits);
 	uniform_int_distribution<size_t> dist(0, bits.bits.size() - 1);
-	new_bits.flip(dist(gen));
+	uniform_real_distribution<double> real_dist(0, 1);
+	do {
+		new_bits.flip(dist(gen));
+	} while (real_dist(gen) < bit_flip_probability);
 	return new_bits;
 }
 
 template <class Generator>
 const BitSet satisfy_random_client(Generator& gen, const BitSet& bits, const vector<BitSet>& client_likes, const vector<BitSet>& client_dislikes) {
 	uniform_int_distribution<size_t> dist(0, client_likes.size() - 1);
-	const size_t client_index = dist(gen);
+	uniform_real_distribution<double> real_dist(0, 1);
 	BitSet result = BitSet(bits.bits);
-	result = result | client_likes[client_index];
-	return result & (~client_dislikes[client_index]);
+	do {
+		const size_t client_index = dist(gen);
+		result = result | client_likes[client_index];
+		result = result & (~client_dislikes[client_index]);
+	} while (real_dist(gen) < client_satisfaction_probability);
+	return result;
 }
 
 int main() {
