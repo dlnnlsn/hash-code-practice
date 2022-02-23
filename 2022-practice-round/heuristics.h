@@ -52,13 +52,14 @@ std::unordered_set<int> uniformRandomResolution(const std::vector<std::unordered
 	return satisfied;
 }
 
-std::unordered_set<int> removeMostConflicting(std::vector<std::unordered_set<int> > graph) {
-	std::unordered_set<int> satisfied;
-	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
+template <typename T>
+std::unordered_set<T> removeMostConflicting(std::vector<std::unordered_set<T> > graph) {
+	std::unordered_set<T> satisfied;
+	for (T i = 0; i < graph.size(); ++i) satisfied.insert(i);
 	while (true) {
 		int maxConflicts = 0;
 		int mostConflictingPerson = -1;
-		for (auto person : satisfied) {
+		for (T person : satisfied) {
 			int numConflicts = graph[person].size();
 			if (numConflicts > maxConflicts) {
 				maxConflicts = numConflicts;
@@ -72,14 +73,15 @@ std::unordered_set<int> removeMostConflicting(std::vector<std::unordered_set<int
 	return satisfied;
 }
 
-std::unordered_set<int> addLeastConflicting(const std::vector<std::unordered_set<int>>& graph) {
-	std::unordered_set<int> satisfied;
-	std::unordered_set<int> potential;
-	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
+template <typename T>
+std::unordered_set<T> addLeastConflicting(const std::vector<std::unordered_set<T>>& graph) {
+	std::unordered_set<T> satisfied;
+	std::unordered_set<T> potential;
+	for (T i = 0; i < graph.size(); ++i) potential.insert(i);
 	while (potential.size() > 0) {
 		int leastConflicts = graph.size() + 1;
 		int leastConflictingPerson = -1;
-		for (auto person : potential) {
+		for (T person : potential) {
 			int numConflicts = graph[person].size();
 			if (numConflicts < leastConflicts) {
 				leastConflicts = numConflicts;
