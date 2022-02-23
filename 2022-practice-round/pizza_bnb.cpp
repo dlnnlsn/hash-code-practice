@@ -21,7 +21,7 @@ void sigint_handler(int sig) {
 }
 
 int running_threads = 0;
-constexpr int max_threads = 128;
+constexpr int max_threads = 8;
 
 vector<int> best_so_far;
 mutex best_lock;
@@ -53,6 +53,26 @@ typedef struct StackFrame {
 	unordered_set<int> conflicts;
 	StackFrame(int _person, vector<int> _included, unordered_set<int> _conflicts): person(_person), included(_included), conflicts(_conflicts) {}
 } StackFrame;
+
+unordered_set<int> removeMostConflicting(vector<set<int> > graph) {
+	unordered_set<int> satisfied;
+	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
+	while (true) {
+		int maxConflicts = 0;
+		int mostConflictingPerson = -1;
+		for (auto person : satisfied) {
+			int numConflicts = graph[person].size();
+			if (numConflicts > maxConflicts) {
+				maxConflicts = numConflicts;
+				mostConflictingPerson = person;
+			}
+		}
+		if (maxConflicts == 0) break;
+		satisfied.erase(mostConflictingPerson);
+		for (auto& node : graph) node.erase(mostConflictingPerson);
+	}
+	return satisfied;
+}
 
 void branch_and_bound(stack<StackFrame> call_stack) {
 	while (running && call_stack.size() > 0) {
@@ -163,6 +183,10 @@ int main() {
 			}
 		}
 	}
+
+	unordered_set<int> heuristic = removeMostConflicting(graph);
+	best_so_far = vector<int>(heuristic.begin(), heuristic.end());
+	cerr << "Remove Most Conflicting Heuristic: " << best_so_far.size() << endl;
 
 	signal(SIGINT, sigint_handler);
 
