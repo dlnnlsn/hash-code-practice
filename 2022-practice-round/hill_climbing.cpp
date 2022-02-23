@@ -169,13 +169,16 @@ int main() {
 
 	unordered_set<size_t> most_conflicting = removeMostConflicting(conflict_graph);
 	bits most_conflicting_ingredients = ingredients_from_client_set(most_conflicting, client_likes);
-	cerr << "Most conflicting heuristic: ";
-	cerr << evaluate_fitness(most_conflicting_ingredients, client_likes, client_dislikes) << endl;
+	const size_t most_conflicting_fitness = evaluate_fitness(most_conflicting_ingredients, client_likes, client_dislikes);
+	cerr << "Most conflicting heuristic: " << most_conflicting_fitness << endl;
+	pool.push_back(Gene(most_conflicting_ingredients, most_conflicting_fitness));
+
 
 	unordered_set<size_t> least_conflicting = addLeastConflicting(conflict_graph);
 	bits least_conflicting_ingredients = ingredients_from_client_set(least_conflicting, client_likes);
-	cerr << "Least conflicting heuristic: ";
-	cerr << evaluate_fitness(least_conflicting_ingredients, client_likes, client_dislikes) << endl;
+	const size_t least_conflicting_fitness = evaluate_fitness(least_conflicting_ingredients, client_likes, client_dislikes);
+	cerr << "Least conflicting heuristic: " << least_conflicting_fitness << endl;
+	pool.push_back(Gene(least_conflicting_ingredients, least_conflicting_fitness));
 
 	for (size_t i = 2; i < pool_size; ++i) {
 		const bits ingredients = random_bitset(generator, num_ingredients);
