@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "heuristics.h"
 #include <iostream>
 #include <random>
 #include <signal.h>
@@ -140,87 +141,6 @@ const BitSet satisfy_random_client(Generator& gen, const BitSet& bits, const vec
 		result = result & (~client_dislikes[client_index]);
 	} while (real_dist(gen) < client_satisfaction_probability);
 	return result;
-}
-
-unordered_set<int> removeMostConflicting(vector<unordered_set<int> > graph) {
-	unordered_set<int> satisfied;
-	for (int i = 0; i < graph.size(); ++i) satisfied.insert(i);
-	while (true) {
-		int maxConflicts = 0;
-		int mostConflictingPerson = -1;
-		for (auto person : satisfied) {
-			int numConflicts = graph[person].size();
-			if (numConflicts > maxConflicts) {
-				maxConflicts = numConflicts;
-				mostConflictingPerson = person;
-			}
-		}
-		if (maxConflicts == 0) break;
-		satisfied.erase(mostConflictingPerson);
-		for (auto& node : graph) node.erase(mostConflictingPerson);
-	}
-	return satisfied;
-}
-
-unordered_set<int> addLeastConflicting(const vector<unordered_set<int>>& graph) {
-	unordered_set<int> satisfied;
-	unordered_set<int> potential;
-	for (int i = 0; i < graph.size(); ++i) potential.insert(i);
-	while (potential.size() > 0) {
-		int leastConflicts = graph.size() + 1;
-		int leastConflictingPerson = -1;
-		for (auto person : potential) {
-			int numConflicts = graph[person].size();
-			if (numConflicts < leastConflicts) {
-				leastConflicts = numConflicts;
-				leastConflictingPerson = person;
-			}
-		}
-		satisfied.insert(leastConflictingPerson);
-		for (auto person : graph[leastConflictingPerson]) potential.erase(person);
-		potential.erase(leastConflictingPerson);
-	}
-	return satisfied;
-}
-
-unordered_set<int> leastDislikes(const vector<unordered_set<int>>& graph, const vector<vector<string>>& clientDislikes) {
-	unordered_set<int> satisfied;
-	unordered_set<int> potential;
-	for (int i = 0; i < clientDislikes.size(); ++i) potential.insert(i);
-	while (potential.size() > 0) {
-		int leastDislikes = -1;
-		int leastFussyPerson = -1;
-		for (int person : potential) {
-			if (leastDislikes == -1 || clientDislikes[person].size() < leastDislikes) {
-				leastDislikes = clientDislikes[person].size();
-				leastFussyPerson = person;
-			}
-		}
-		satisfied.insert(leastFussyPerson);
-		potential.erase(leastFussyPerson);
-		for (int person : graph[leastFussyPerson]) potential.erase(person);
-	}
-	return satisfied;
-}
-
-unordered_set<int> fewestPreferences(const vector<unordered_set<int>>& graph, const vector<vector<string>>& clientLikes, const vector<vector<string>>& clientDislikes) {
-	unordered_set<int> satisfied;
-	unordered_set<int> potential;
-	for (int i = 0; i < clientDislikes.size(); ++i) potential.insert(i);
-	while (potential.size() > 0) {
-		int fewestPreferences = -1;
-		int leastFussyPerson = -1;
-		for (int person : potential) {
-			if (fewestPreferences== -1 || clientDislikes[person].size() + clientLikes[person].size() < fewestPreferences) {
-				fewestPreferences = clientDislikes[person].size() + clientLikes[person].size();
-				leastFussyPerson = person;
-			}
-		}
-		satisfied.insert(leastFussyPerson);
-		potential.erase(leastFussyPerson);
-		for (int person : graph[leastFussyPerson]) potential.erase(person);
-	}
-	return satisfied;
 }
 
 BitSet ingredients_from_client_set(const unordered_set<int>& clients, const vector<BitSet>& client_likes, const int num_ingredients) {
